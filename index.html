@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#3b82f6">
+<title>促销活动计算器</title>
+<style>
+  :root {
+    --bg: #eef2f7;
+    --bg-grad: linear-gradient(135deg, #eef2f7 0%, #e3e9f5 100%);
+    --surface: #ffffff;
+    --surface-2: #f5f7fb;
+    --text: #1a202c;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #3b82f6;
+    --primary-2: #6366f1;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-lg: 0 12px 28px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.04);
+    --bar-payment: #3b82f6;
+    --bar-coupon-act: #10b981;
+    --bar-coupon-points: #f59e0b;
+  }
+  [data-theme="dark"] {
+    --bg: #0b1220;
+    --bg-grad: linear-gradient(135deg, #0b1220 0%, #131c30 100%);
+    --surface: #1a2436;
+    --surface-2: #233049;
+    --text: #e8edf5;
+    --text-muted: #94a3b8;
+    --border: #2c3a55;
+    --primary: #60a5fa;
+    --primary-2: #818cf8;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --shadow: 0 1px 3px rgba(0,0,0,.35);
+    --shadow-lg: 0 12px 28px rgba(0,0,0,.45);
+    --bar-payment: #60a5fa;
+    --bar-coupon-act: #34d399;
+    --bar-coupon-points: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg-grad); background-attachment: fixed;
+    color: var(--text); line-height: 1.6; min-height: 100vh;
+    padding: 24px 16px;
+    padding: 24px max(16px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+    transition: background .3s, color .3s;
+    overflow-x: hidden;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 0 6px; }
+  h1 {
+    font-size: 26px; font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: .5px;
+  }
+  .theme-toggle {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); transition: transform .25s, background .2s;
+  }
+  .theme-toggle:hover { transform: rotate(20deg) scale(1.08); }
+  .card {
+    background: var(--surface); border-radius: 14px;
+    padding: 20px 22px; margin-bottom: 14px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 16px; font-weight: 600; margin-bottom: 14px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--primary); color: var(--text);
+  }
+  .rules-list { font-size: 13px; color: var(--text-muted); line-height: 1.9; }
+  .rules-list b { color: var(--text); font-weight: 600; }
+  .input-section { display: flex; flex-direction: column; gap: 8px; }
+  .input-section label { font-weight: 600; color: var(--text); font-size: 14px; }
+  .input-section input {
+    padding: 12px 14px; border: 2px solid var(--border); border-radius: 8px;
+    font-size: 16px; background: var(--surface-2); color: var(--text);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input-section input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, .15); }
+  .input-grid-2cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .options-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .option-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px;
+    cursor: pointer; transition: all .2s;
+  }
+  .option-item:hover { border-color: var(--primary); background: var(--surface); transform: translateY(-1px); }
+  .option-item input[type="radio"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+  .option-item label { font-size: 14px; cursor: pointer; flex: 1; color: var(--text); }
+  .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  }
+  .checkbox-item input { width: 16px; height: 16px; accent-color: var(--primary); }
+  .checkbox-item label { cursor: pointer; flex: 1; font-size: 14px; }
+  .calculate-btn {
+    width: 100%; padding: 14px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: white; border: none; border-radius: 10px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    box-shadow: var(--shadow-lg); transition: transform .15s, box-shadow .15s;
+    margin-top: 8px; letter-spacing: 1px;
+    min-height: 48px; position: relative; z-index: 10;
+  }
+  .calculate-btn:hover { transform: translateY(-2px); }
+  .calculate-btn:active { transform: translateY(0) scale(.99); }
+  .results { display: none; }
+  .results.shown { display: block; animation: fadeUp .4s ease-out; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .results > h2 { font-size: 20px; margin: 24px 0 14px; color: var(--text); }
+  .plans-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px; margin-bottom: 22px;
+  }
+  .plan-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; position: relative;
+    transition: transform .2s;
+  }
+  .plan-card:hover { transform: translateY(-2px); }
+  .plan-card.cash-best { border: 2px solid var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, .12); }
+  .plan-card.net-best { border: 2px solid var(--success); box-shadow: 0 0 0 4px rgba(16, 185, 129, .12); }
+  .plan-card::before {
+    position: absolute; top: -10px; right: 14px;
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; color: white;
+  }
+  .plan-card.cash-best::before { content: "本单现金最少"; background: var(--primary); }
+  .plan-card.net-best::before { content: "净支出最少"; background: var(--success); }
+  .plan-rank { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .plan-payment { font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+  .plan-card.net-best .plan-payment { color: var(--success); }
+  .plan-payment small { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+  .plan-sub { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .plan-sub.cash { color: var(--primary); }
+  .plan-sub.net { color: var(--success); }
+  .plan-detail { font-size: 13px; display: flex; flex-direction: column; gap: 0; }
+  .plan-detail .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+  .plan-detail .row:last-child { border-bottom: none; }
+  .plan-detail .row .label { color: var(--text-muted); }
+  .plan-detail .row .value { font-weight: 600; }
+  .plan-detail .row.highlight { background: rgba(59, 130, 246, .06); border-radius: 4px; padding: 8px 6px; }
+  .plan-detail .group-title {
+    font-size: 12px; font-weight: 700; color: var(--primary);
+    margin-top: 10px; padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .plan-detail .group-title:first-child { margin-top: 0; }
+  .plan-detail .group-title.points { color: var(--warning); }
+  .chart-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .chart-section h3 { font-size: 15px; margin-bottom: 6px; color: var(--text); }
+  .chart-section .sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .chart-legend .item { display: flex; align-items: center; gap: 6px; }
+  .chart-legend .dot { width: 12px; height: 12px; border-radius: 3px; }
+  .bar-track { height: 40px; background: var(--surface-2); border-radius: 6px; overflow: hidden; display: flex; }
+  .bar-segment {
+    height: 100%; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 13px; font-weight: 600;
+    overflow: hidden; white-space: nowrap; transition: width .6s ease-out;
+  }
+  .bar-segment.payment { background: var(--bar-payment); }
+  .bar-segment.coupon-act { background: var(--bar-coupon-act); }
+  .bar-segment.coupon-points { background: var(--bar-coupon-points); }
+  .bar-summary { margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: right; }
+
+  /* ===== 平板适配 ===== */
+  @media (max-width: 768px) {
+    body { padding-top: 18px; padding-bottom: 18px; }
+    .container { max-width: 100%; }
+    .card { padding: 16px 18px; margin-bottom: 12px; border-radius: 12px; }
+    .card h2 { font-size: 15px; margin-bottom: 12px; padding-bottom: 8px; }
+    .options-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .plan-card { padding: 16px; }
+    .chart-section { padding: 16px 18px; }
+  }
+
+  /* ===== 手机 H5 适配 ===== */
+  @media (max-width: 640px) {
+    body {
+      padding: 14px max(12px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+    }
+    .container { max-width: 100%; }
+    header { margin-bottom: 16px; padding: 0 4px; }
+    h1 { font-size: 20px; letter-spacing: .3px; }
+    .theme-toggle { width: 38px; height: 38px; font-size: 16px; }
+    .card { padding: 14px 14px; margin-bottom: 10px; border-radius: 12px; }
+    .card h2 { font-size: 14px; margin-bottom: 10px; padding-bottom: 6px; border-bottom-width: 2px; }
+    .rules-list { font-size: 12px; line-height: 1.85; }
+    .input-section label { font-size: 13px; }
+    .input-section input {
+      padding: 12px 12px; font-size: 16px; border-radius: 8px; min-height: 48px;
+    }
+    /* 活动4 两个输入框改为单列堆叠 */
+    .input-grid-2cols { grid-template-columns: 1fr; gap: 10px; }
+    .options-grid { grid-template-columns: 1fr; gap: 6px; }
+    .option-item, .checkbox-item {
+      padding: 12px 12px; min-height: 48px; border-radius: 8px;
+    }
+    .option-item label, .checkbox-item label { font-size: 13px; }
+    .calculate-btn {
+      padding: 14px 20px; font-size: 16px; min-height: 52px;
+      position: sticky; bottom: 12px;
+      margin-top: 14px;
+    }
+    .results > h2 { font-size: 18px; margin: 18px 0 12px; }
+    .plans-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+    .plan-card { padding: 14px; border-radius: 12px; }
+    .plan-card::before { font-size: 10px; padding: 2px 8px; right: 10px; top: -8px; }
+    .plan-payment { font-size: 26px; }
+    .plan-payment small { font-size: 12px; }
+    .plan-sub { font-size: 12px; margin-bottom: 12px; }
+    .plan-detail { font-size: 12px; }
+    .plan-detail .row { padding: 7px 0; }
+    .plan-detail .row.highlight { padding: 7px 6px; }
+    .plan-detail .group-title { font-size: 11px; margin-top: 8px; letter-spacing: .3px; }
+    .chart-section { padding: 14px; border-radius: 12px; }
+    .chart-section h3 { font-size: 14px; }
+    .chart-section .sub { font-size: 11px; margin-bottom: 10px; }
+    .chart-legend { gap: 12px; font-size: 11px; margin-bottom: 10px; }
+    .chart-legend .dot { width: 10px; height: 10px; }
+    .bar-track { height: 36px; border-radius: 6px; }
+    .bar-segment { font-size: 11px; }
+    .bar-summary { font-size: 11px; margin-top: 8px; line-height: 1.5; }
+  }
+
+  /* ===== 小屏手机适配 ===== */
+  @media (max-width: 380px) {
+    body { padding: 12px max(10px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right)); }
+    h1 { font-size: 18px; }
+    .card { padding: 12px; }
+    .card h2 { font-size: 13px; }
+    .rules-list { font-size: 11px; line-height: 1.75; }
+    .plan-payment { font-size: 22px; }
+    .plan-payment small { font-size: 11px; }
+    .plan-detail .row { padding: 6px 0; }
+    .plan-detail .row .label { font-size: 11px; }
+    .plan-detail .row .value { font-size: 12px; }
+    .bar-track { height: 32px; }
+    .bar-segment { font-size: 10px; }
+  }
+
+  /* ===== 横屏适配（短高度） ===== */
+  @media (max-height: 500px) and (orientation: landscape) {
+    body { padding: 12px 16px; }
+    header { margin-bottom: 12px; }
+    h1 { font-size: 18px; }
+    .card { padding: 10px 14px; margin-bottom: 8px; }
+    .card h2 { font-size: 13px; margin-bottom: 8px; padding-bottom: 4px; }
+    .calculate-btn { padding: 10px 20px; min-height: 44px; }
+  }
+
+  /* ===== 大屏（桌面）微调 ===== */
+  @media (min-width: 1024px) {
+    body { padding: 32px 24px; }
+    .card { padding: 24px 26px; }
+    .plans-grid { gap: 18px; }
+    .plan-card { padding: 22px; }
+    .chart-section { padding: 24px 26px; }
+  }
+
+  /* ===== 打印样式 ===== */
+  @media print {
+    body { background: white; padding: 0; }
+    .theme-toggle, .calculate-btn { display: none; }
+    .card, .plan-card, .chart-section { box-shadow: none; border: 1px solid #999; }
+    .results { display: block !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>促销活动计算器</h1>
+      <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🌙</button>
+    </header>
+
+    <section class="card">
+      <h2>活动规则（固定叠加）</h2>
+      <div class="rules-list">
+        <div><b>活动1</b>：每满 2000 元返 100 元券，单日限返 10 次</div>
+        <div><b>活动2</b>：满 5000 元加赠 100 元券，单日限返 1 次</div>
+        <div><b>活动3</b>：满 8000 元加赠 100 元券，单日限返 1 次</div>
+        <div style="margin-top:6px;color:var(--success);"><b>叠加示例</b>：实付 8000 元 → 活动1返 4×100=400 + 活动2加赠100 + 活动3加赠100 = <b>共返 600 元券</b></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="input-section">
+        <label for="orderAmount">订单金额（元）</label>
+        <input type="number" id="orderAmount" min="0" step="100" placeholder="请输入订单金额" inputmode="numeric">
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>活动4：多倍万象星（积分倍数）</h2>
+      <div class="input-grid-2cols">
+        <div class="input-section">
+          <label for="pointsPerYuan">多少钱积 1 分（元）</label>
+          <input type="number" id="pointsPerYuan" min="0.01" step="0.01" value="1" inputmode="decimal">
+        </div>
+        <div class="input-section">
+          <label for="pointsMultiple">积分倍数（1 表示不参加，默认 1）</label>
+          <input type="number" id="pointsMultiple" min="1" step="1" value="1" inputmode="numeric">
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>活动5：接满返券（用活动1/2/3 返的券抵扣本单）</h2>
+      <div class="options-grid" id="activity5-options">
+        <div class="option-item"><input type="radio" id="act5-none" name="activity5" value="none" checked><label for="act5-none">不参加</label></div>
+        <div class="option-item"><input type="radio" id="act5-no" name="activity5" value="no"><label for="act5-no">无门槛接券</label></div>
+        <div class="option-item"><input type="radio" id="act5-1000" name="activity5" value="1000"><label for="act5-1000">满1000用一张</label></div>
+        <div class="option-item"><input type="radio" id="act5-2000" name="activity5" value="2000"><label for="act5-2000">满2000用一张</label></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>活动6：积分兑换方式（提示，不参与计算）</h2>
+      <div class="rules-list" style="padding: 10px 14px; background: var(--surface-2); border-left: 3px solid var(--warning); border-radius: 4px;">
+        <div><b>规则</b>：25000 积分兑 100 元券（每人每日限兑 10 张，使用无限制）</div>
+        <div><b>规则</b>：300 积分兑 1 元（使用无限制）</div>
+        <div style="margin-top:6px;color:var(--warning);"><b>提示</b>：本工具不掌握用户已有积分数量，无法自动计入积分券抵扣。如有积分，请手动用「积分 ÷ 25000 × 100 + 积分 ÷ 300」估算可抵金额。</div>
+      </div>
+    </section>
+
+    <button class="calculate-btn" id="calculateBtn">计算最优方案</button>
+
+    <section class="results" id="results">
+      <h2>计算结果</h2>
+      <div class="plans-grid" id="plansGrid"></div>
+      <div class="chart-section">
+        <h3>金额构成</h3>
+        <div class="sub">实付现金 + 返券抵扣 = 订单金额</div>
+        <div class="chart-legend">
+          <div class="item"><span class="dot" style="background: var(--bar-payment);"></span>实付现金</div>
+          <div class="item"><span class="dot" style="background: var(--bar-coupon-act);"></span>活动1/2/3 返券抵扣</div>
+        </div>
+        <div class="bar-track" id="barTrack"></div>
+        <div class="bar-summary" id="barSummary"></div>
+      </div>
+    </section>
+  </div>
+
+<script>
+// ===== 计算活动1/2/3 返券（按实付金额 P，返券当次抵扣本单） =====
+function calcActCoupons(P, act5Mode) {
+  const act1Count = Math.min(10, Math.floor(P / 2000));   // 每满2000返100，限10次
+  const act2Count = (P >= 5000) ? 1 : 0;                   // 满5000加赠100，限1次
+  const act3Count = (P >= 8000) ? 1 : 0;                   // 满8000加赠100，限1次
+  const totalCouponCount = act1Count + act2Count + act3Count;
+  const totalCouponValue = totalCouponCount * 100;
+  // 活动5：接券决定本单可用张数（返券当次用掉抵扣）
+  let usableCount = 0;
+  if (act5Mode === 'no') usableCount = totalCouponCount;
+  else if (act5Mode === '1000') usableCount = Math.min(totalCouponCount, Math.floor(P / 1000));
+  else if (act5Mode === '2000') usableCount = Math.min(totalCouponCount, Math.floor(P / 2000));
+  return { act1Count, act2Count, act3Count, totalCouponCount, totalCouponValue, usableCount, usableValue: usableCount * 100 };
+}
+
+// ===== 计算积分兑券（活动6） =====
+function calcPointsCoupons(totalPoints, use25000, use300) {
+  let remaining = totalPoints;
+  let coupon25kCount = 0, coupon300Yuan = 0;
+  if (use25000 && remaining >= 25000) {
+    coupon25kCount = Math.min(10, Math.floor(remaining / 25000));
+    remaining -= coupon25kCount * 25000;
+  }
+  if (use300 && remaining >= 300) {
+    coupon300Yuan = Math.floor(remaining / 300);
+    remaining -= coupon300Yuan * 300;
+  }
+  return {
+    coupon25kCount, coupon300Yuan,
+    pointsCouponValue: coupon25kCount * 100 + coupon300Yuan,
+    pointsUsed: totalPoints - remaining,
+    pointsRemaining: remaining
+  };
+}
+
+// ===== 主算法：返券按订单金额 S 算，积分按返券抵扣后的实付算 =====
+// 1. 返券按 S 算 → 2. 返券抵扣本单 → 3. 实付 = S - 返券抵扣
+// 4. 积分 = floor(实付 / 多少钱积1分) × 倍数（仅展示，不参与抵扣）
+function calculateBest(S, multiple, act5Mode, pointsPerYuan) {
+  // 1. 返券按订单金额 S 算
+  const act = calcActCoupons(S, act5Mode);
+  // 2. 返券抵扣本单（不超过 S）
+  const actUsedValue = Math.min(act.usableValue, S);
+  // 3. 实付 = S - 返券抵扣
+  const payment = S - actUsedValue;
+  // 4. 积分 = floor(实付 / 多少钱积1分) × 倍数（仅展示，不参与抵扣）
+  const pointsEarned = Math.floor(payment / pointsPerYuan) * multiple;
+  const savings = S - payment;
+  return {
+    payment, savings,
+    act1Count: act.act1Count, act2Count: act.act2Count, act3Count: act.act3Count,
+    actCouponTotal: act.totalCouponCount, actCouponTotalValue: act.totalCouponValue,
+    actCouponUsedValue: actUsedValue,
+    pointsEarned,
+    totalCouponUsed: actUsedValue
+  };
+}
+
+// ===== 渲染最优方案卡片 =====
+function renderPlan(p, S) {
+  const grid = document.getElementById('plansGrid');
+  if (!p) {
+    grid.innerHTML = '<div class="plan-card">无满足条件的方案</div>';
+    return;
+  }
+  const rows = [
+    { type: 'group', title: '基本信息' },
+    ['订单金额', `¥${S.toLocaleString()}`],
+    ['实付现金', `¥${p.payment.toLocaleString()}`, true],
+    { type: 'group', title: '活动1/2/3 返券抵扣' },
+    ['活动1 返券', `${p.act1Count} 张 × 100 = ¥${p.act1Count * 100}`],
+    ['活动2 加赠', `${p.act2Count} 张 × 100 = ¥${p.act2Count * 100}`],
+    ['活动3 加赠', `${p.act3Count} 张 × 100 = ¥${p.act3Count * 100}`],
+    ['返券抵扣本单', `¥${p.actCouponUsedValue}`, true],
+    { type: 'group', title: '积分', points: true },
+    ['本次消费获得积分', `${p.pointsEarned.toLocaleString()} 分`, true],
+    { type: 'group', title: '汇总' },
+    ['节省金额', `¥${p.savings.toLocaleString()}`, true]
+  ];
+
+  const renderRow = (r) => {
+    if (r.type === 'group') {
+      return `<div class="group-title${r.points ? ' points' : ''}">${r.title}</div>`;
+    }
+    return `<div class="row${r[2] ? ' highlight' : ''}"><span class="label">${r[0]}</span><span class="value">${r[1]}</span></div>`;
+  };
+
+  grid.innerHTML = `
+    <div class="plan-card cash-best">
+      <div class="plan-rank">最优方案</div>
+      <div class="plan-payment">¥${p.payment.toLocaleString()} <small>实付现金</small></div>
+      <div class="plan-sub cash">节省 ¥${p.savings.toLocaleString()}（等效折扣 ${(p.savings / S * 100).toFixed(1)}%）</div>
+      <div class="plan-detail">
+        ${rows.map(renderRow).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ===== 渲染金额构成条形图 =====
+function renderChart(p, S) {
+  const track = document.getElementById('barTrack');
+  const summary = document.getElementById('barSummary');
+  if (!p) { track.innerHTML = ''; summary.textContent = ''; return; }
+  const need = S;
+  const pay = p.payment;
+  const actUsed = p.actCouponUsedValue;
+  const make = (val, cls) => {
+    if (val <= 0) return '';
+    const pct = (val / need * 100).toFixed(2);
+    const text = pct >= 10 ? `¥${val}` : '';
+    return `<div class="bar-segment ${cls}" style="width:${pct}%">${text}</div>`;
+  };
+  track.innerHTML = make(pay, 'payment') + make(actUsed, 'coupon-act');
+  summary.textContent = `实付 ¥${pay} + 返券抵 ¥${actUsed} = ¥${pay + actUsed}（订单 ¥${S}）`;
+}
+
+// ===== 按钮事件 =====
+document.getElementById('calculateBtn').addEventListener('click', () => {
+  const orderAmount = parseInt(document.getElementById('orderAmount').value, 10);
+  if (isNaN(orderAmount) || orderAmount <= 0) { alert('请输入有效的订单金额'); return; }
+  const multiple = parseInt(document.getElementById('pointsMultiple').value, 10) || 1;
+  const pointsPerYuan = parseFloat(document.getElementById('pointsPerYuan').value) || 1;
+  const act5Mode = document.querySelector('input[name="activity5"]:checked').value;
+  const cashPlan = calculateBest(orderAmount, multiple, act5Mode, pointsPerYuan);
+  renderPlan(cashPlan, orderAmount);
+  renderChart(cashPlan, orderAmount);
+  const resultsEl = document.getElementById('results');
+  resultsEl.classList.add('shown');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// ===== 暗色模式 =====
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+document.documentElement.setAttribute('data-theme', initialTheme);
+themeToggle.textContent = initialTheme === 'dark' ? '☀' : '🌙';
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  themeToggle.textContent = next === 'dark' ? '☀' : '🌙';
+});
+</script>
+</body>
+</html>
